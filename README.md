@@ -61,6 +61,7 @@ npm run dev
 | 资源池 | `resource_pool` | 计算资源 | 池名称、总核数、总内存 |
 | 血缘图谱 | `lineage_graph` | 血缘边 | 源节点、目标节点、传递字段 |
 | 异常捕获 | `exception_capture` | 异常记录 | 发生时间、所属管线、异常类型 |
+| 批量回放 | `batch_replay`（`/batch-replay`） | 补偿分区清单 | 目标表、实际缺口、原异常引用 |
 | 模板仓库 | `template_store` | 处理模板 | 模板名称、处理类型、输入Schema |
 | 分区扫描 | `partition_scan` | 扫描报告 | 报告时间、目标表、分区总数 |
 | 配置迁移 | `config_migration` | 迁移任务 | 任务名称、源环境、目标环境 |
@@ -76,6 +77,11 @@ npm run dev
   `frontend/src/domain/<模块>.ts`，用于承载真实业务差异并维持36题位容量。
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
+- 批量回放跨异常记录归并分区：同一目标表的同一日期只进清单一次，
+  只有源表和加工口径有效的日期才进入执行批次，上游源分区缺失的日期
+  先阻塞、补源成功后重算释放；写入确认按「目标表 + 分区」去重。
+  引擎在 `app/engine/batch_replay.py`，接口前缀 `/api/batch-replay`，
+  前端入口 `/batch-replay`。
 
 领域：数据工程
 子方向：数仓与数据湖
